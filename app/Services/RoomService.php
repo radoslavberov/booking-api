@@ -2,20 +2,17 @@
 
 namespace App\Services;
 
-use App\Http\Resources\Room\RoomCollection;
-use App\Http\Resources\Room\RoomResource;
 use App\Models\Room;
+use Illuminate\Database\Eloquent\Collection;
 
 class RoomService
 {
-    public function getRooms()
+    public function getRooms(): Collection
     {
-        $rooms = Room::all();
-
-        return RoomCollection::make($rooms);
+        return Room::all();
     }
 
-    public function create(array $data)
+    public function create(array $data): Room
     {
         return Room::create([
             'number'            => $data['number'],
@@ -25,8 +22,8 @@ class RoomService
         ]);
     }
 
-    public function getRoom(string $id)
+    public function getRoom(string $roomId): Room
     {
-       return RoomResource::make(Room::findOrFail($id));
+        return Room::findOrfail($roomId);
     }
 }

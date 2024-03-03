@@ -29,8 +29,19 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     # Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::apiResource('rooms',RoomController::class)->only('index', 'store', 'show');
-    Route::apiResource('bookings',BookingController::class)->only('index', 'store');
-    Route::apiResource('customers',CustomerController::class)->only('index', 'store');
-    Route::apiResource('payments',PaymentController::class)->only( 'store');
+    Route::prefix('customers')->controller(CustomerController::class)->group(function() {
+        Route::get('/', 'index');
+        Route::post('/store', 'store');
+    });
+
+    Route::prefix('rooms')->controller(RoomController::class)->group(function() {
+        Route::get('/', 'index');
+        Route::post('/store', 'store');
+        Route::get('/{room}', 'show');
+    });
+
+    Route::prefix('bookings')->controller(BookingController::class)->group(function() {
+        Route::get('/', 'index');
+        Route::post('/store', 'store');
+    });
 });

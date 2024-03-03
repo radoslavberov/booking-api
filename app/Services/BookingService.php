@@ -3,69 +3,94 @@
 namespace App\Services;
 
 use App\Exceptions\RoomUnavailableException;
-use App\Http\Resources\Booking\BookingCollection;
 use App\Models\Booking;
+use App\Models\Payment;
 use App\Models\Room;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class BookingService
 {
-    public function getBookings()
+    public function getBookings(): Collection
     {
-        return BookingCollection::make(Booking::all());
+        return Booking::all();
     }
 
-    public function create(array $data)
+    public function create(array $data): Booking
     {
+        $room = Room::findOrFail($data['room_id']);
+        $checkIn = Carbon::parse($data['check_in_date']);
+        $checkOut = Carbon::parse($data['check_out_date']);
+
         # Check room availability
-        $this->checkRoomAvailability($data['room_id'], $data['check_in_date'], $data['check_out_date']);
+        if($this->checkRoomAvailability($room, $checkIn, $checkOut))
+        throw new RoomUnavailableException();
 
-        #Calculate total price of the reservation
-        $totalPrice = $this->calculateTotalPrice($data['room_id'], $data['check_in_date'], $data['check_out_date']);
+        DB::beginTransaction();
 
-        // Create the booking
-        return Booking::create([
-            'room_id' => $data['room_id'],
-            'customer_id' => $data['customer_id'],
-            'check_in_date' =>  $data['check_in_date'],
-            'check_out_date' => $data['check_out_date'],
-            'total_price' => $totalPrice,
-        ]);
+        try {
+
+            #Calculate total price of the reservation
+            $totalPrice = $this->calculateTotalPrice($room, $checkIn, $checkOut);
+
+            // Create the booking
+            $booking = Booking::create([
+                'room_id' => $data['room_id'],
+                'customer_id' => $data['customer_id'],
+                'check_in_date' => $data['check_in_date'],
+                'check_out_date' => $data['check_out_date'],
+                'total_price' => $totalPrice,
+            ]);
+
+            $this->createPayment($booking, $totalPrice);
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new \Exception($e);
+        }
+
+        return $booking;
     }
 
-    private function checkRoomAvailability($roomId, $checkInDate, $checkOutDate)
+    public function checkRoomAvailability(Room $room, Carbon $in, Carbon $out): bool
     {
-        $existingBookings = Booking::where('room_id', $roomId)
-            ->where(function ($query) use ($checkInDate, $checkOutDate) {
-                $query->where(function ($query) use ($checkInDate, $checkOutDate) {
-                    $query->whereBetween('check_in_date', [$checkInDate, $checkOutDate])
-                        ->orWhereBetween('check_out_date', [$checkInDate, $checkOutDate]);
-                })->orWhere(function ($query) use ($checkInDate, $checkOutDate) {
-                    $query->where('check_in_date', '<', $checkInDate)
-                        ->where('check_out_date', '>', $checkInDate);
-                })->orWhere(function ($query) use ($checkInDate, $checkOutDate) {
-                    $query->where('check_in_date', '<', $checkOutDate)
-                        ->where('check_out_date', '>', $checkOutDate);
+        return Booking::where('room_id', $room->id)
+            ->where(function ($query) use ($in, $out) {
+                $query->where(function ($query) use ($in, $out) {
+                    $query->whereBetween('check_in_date', [$in, $out])
+                        ->orWhereBetween('check_out_date', [$in, $out]);
+                })->orWhere(function ($query) use ($in, $out) {
+                    $query->where('check_in_date', '<', $out)
+                        ->where('check_out_date', '>', $in);
+                })->orWhere(function ($query) use ($in, $out) {
+                    $query->where('check_in_date', '<', $out)
+                        ->where('check_out_date', '>', $out);
                 });
             })->exists();
-
-        if ($existingBookings) {
-            throw new RoomUnavailableException();
-        }
     }
 
-    private function calculateTotalPrice($roomId, $checkIn, $checkOut)
+    private function calculateTotalPrice(Room $room, Carbon $in, Carbon $out): int
     {
-
-        $room = Room::findOrFail($roomId);
         $roomPrice = $room->price_per_night;
 
-        $checkInDate = Carbon::parse($checkIn);
-        $checkOutDate = Carbon::parse($checkOut);
+        $checkInDate = Carbon::parse($in);
+        $checkOutDate = Carbon::parse($out);
 
         # Calculate duration of stay
         $durationOfStay = $checkInDate->diffInDays($checkOutDate);
-
         return $roomPrice * $durationOfStay;
+    }
+
+    public function createPayment(Booking $booking, int $totalPrice): Payment
+    {
+        return Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => $totalPrice,
+            'payment_date' => now(),
+            'status' => 'pending',
+        ]);
     }
 }

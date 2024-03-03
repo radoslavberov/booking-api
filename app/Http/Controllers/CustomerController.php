@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Resources\Customer\CustomerCollection;
 use App\Http\Resources\Customer\CustomerResource;
-use App\Models\Customer;
 use App\Services\CustomerService;
+use App\Traits\PaginationTrait;
 
 class CustomerController extends Controller
 {
+    use PaginationTrait;
     private $customerService;
 
     public function __construct(CustomerService $customerService)
@@ -22,7 +23,11 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        return $this->customerService->getCustomers();
+        $customers = $this->customerService->getCustomers();
+
+        $paginatedCustomers = $this->paginateCollection($customers);
+
+        return CustomerCollection::make($paginatedCustomers);
     }
 
     /**

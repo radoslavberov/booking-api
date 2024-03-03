@@ -6,11 +6,12 @@ use App\Exceptions\RoomUnavailableException;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Resources\Booking\BookingCollection;
 use App\Http\Resources\Booking\BookingResource;
-use App\Models\Booking;
 use App\Services\BookingService;
+use App\Traits\PaginationTrait;
 
 class BookingController extends Controller
 {
+    use PaginationTrait;
     private $bookingService;
 
     public function __construct(BookingService $bookingService)
@@ -23,7 +24,11 @@ class BookingController extends Controller
      */
     public function index()
     {
-        return $this->bookingService->getBookings();
+        $bookings = $this->bookingService->getBookings();
+
+        $paginateBookings = $this->paginateCollection($bookings);
+
+        return BookingCollection::make($paginateBookings);
     }
 
     /**
@@ -34,8 +39,9 @@ class BookingController extends Controller
         try {
             $booking = $this->bookingService->create($request->validated());
             return BookingResource::make($booking);
+
         } catch (RoomUnavailableException $e) {
-            return response()->json(['message' => $e->getMessage()], 400);
+            return response()->json([$e->getMessage()], $e->getCode());
         }
     }
 }

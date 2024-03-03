@@ -7,9 +7,11 @@ use App\Http\Resources\Room\RoomCollection;
 use App\Http\Resources\Room\RoomResource;
 use App\Models\Room;
 use App\Services\RoomService;
+use App\Traits\PaginationTrait;
 
 class RoomController extends Controller
 {
+    use PaginationTrait;
     private $roomService;
 
     public function __construct(RoomService $roomService)
@@ -22,7 +24,11 @@ class RoomController extends Controller
      */
     public function index()
     {
-        return $this->roomService->getRooms();
+        $rooms = $this->roomService->getRooms();
+
+        $paginateRooms = $this->paginateCollection($rooms);
+
+        return RoomCollection::make($paginateRooms);
     }
 
     /**
@@ -39,8 +45,8 @@ class RoomController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Room $room)
     {
-        return $this->roomService->getRoom($id);
+        return RoomResource::make($this->roomService->getRoom($room->id));
     }
 }

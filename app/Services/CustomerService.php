@@ -2,20 +2,17 @@
 
 namespace App\Services;
 
-use App\Http\Controllers\CustomerController;
-use App\Http\Resources\Customer\CustomerCollection;
 use App\Models\Customer;
+use Illuminate\Database\Eloquent\Collection;
 
 class CustomerService
 {
-    public function getCustomers()
+    public function getCustomers(): Collection
     {
-        $customers = Customer::all();
-
-        return CustomerCollection::make($customers);
+        return Customer::all();
     }
 
-    public function create(array $data)
+    public function create(array $data): Customer
     {
         return Customer::create([
             'name' => $data['name'],

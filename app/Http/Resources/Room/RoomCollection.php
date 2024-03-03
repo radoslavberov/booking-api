@@ -15,7 +15,10 @@ class RoomCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => RoomResource::collection($this->collection)
+            'data' => RoomResource::collection($this->collection),
+            'meta' => [
+                'rooms' => $this->collection->count(),
+            ],
         ];
     }
 }
