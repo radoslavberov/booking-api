@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('rooms', function (Blueprint $table) {
             $table->id();
             $table->integer('number');
-            $table->enum('type', ['single', 'double', 'triple', 'family,', 'studio'])->default('single');
+            $table->string('type');
             $table->decimal('price_per_night', 5, 2)->default(0);
-            $table->enum('status', ['available', 'reserved'])->default('available');
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }

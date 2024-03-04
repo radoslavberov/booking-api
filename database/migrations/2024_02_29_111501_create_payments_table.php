@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('booking_id');
             $table->decimal('amount', 10, 2)->default(0);
             $table->timestamp('payment_date');
-            $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
+            $table->string('status');
             $table->timestamps();
         });
     }

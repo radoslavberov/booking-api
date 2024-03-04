@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentStatusEnum;
 use App\Events\BookingCreated;
 use App\Events\CreateBooking;
 use App\Exceptions\RoomUnavailableException;
@@ -94,7 +95,7 @@ class BookingService
             'booking_id' => $booking->id,
             'amount' => $totalPrice,
             'payment_date' => now(),
-            'status' => 'pending',
+            'status' => PaymentStatusEnum::Pending,
         ]);
     }
 }

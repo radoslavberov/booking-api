@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\RoomTypesEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,9 +25,9 @@ class StoreRoomRequest extends FormRequest
     {
         return [
             'number'            => 'required|integer|unique:rooms,number',
-            'type'              => ['required', 'string', Rule::in(['single', 'double', 'triple', 'family', 'studio'])],
+            'type'              => ['required', 'string', Rule::in(RoomTypesEnum::collection())],
             'price_per_night'   => 'required|numeric',
-            'status'            => ['required', 'string', Rule::in(['available', 'reserved'])]
+            'status'            => ['required', 'string', Rule::in(['active', 'inactive'])]
         ];
     }
 }
