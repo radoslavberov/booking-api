@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\BookingCreated;
+use App\Events\CreateBooking;
 use App\Exceptions\RoomUnavailableException;
 use App\Models\Booking;
 use App\Models\Payment;
@@ -42,6 +44,8 @@ class BookingService
                 'check_out_date' => $data['check_out_date'],
                 'total_price' => $totalPrice,
             ]);
+
+            event(new CreateBooking($booking));
 
             $this->createPayment($booking, $totalPrice);
 
