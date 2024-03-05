@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('customer_id');
             $table->timestamp('check_in_date');
             $table->timestamp('check_out_date');
-            $table->decimal('total_price', 5, 2);
+            $table->decimal('total_price', 10, 2);
             $table->timestamps();
 
             $table->foreign('room_id')->references('id')->on('rooms');
