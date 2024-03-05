@@ -18,6 +18,7 @@ class BookingResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id'            => $this->id,
             'room'          => $this->whenLoaded('room', new RoomResource($this->room)),
             'customer'      => $this->whenLoaded('customer', new CustomerResource($this->customer)),
             'checkInDate'   => Carbon::parse($this->check_in_date)->format('d/m/y'),

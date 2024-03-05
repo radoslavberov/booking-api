@@ -29,6 +29,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     # Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    Route::post('/bookings/{booking}/payments', [PaymentController::class, 'store']);
+
     Route::prefix('customers')->controller(CustomerController::class)->group(function() {
         Route::get('/', 'index');
         Route::post('/store', 'store');

@@ -48,8 +48,6 @@ class BookingService
 
             event(new CreateBooking($booking));
 
-            $this->createPayment($booking, $totalPrice);
-
             DB::commit();
 
         } catch (\Exception $e) {
@@ -87,15 +85,5 @@ class BookingService
         # Calculate duration of stay
         $durationOfStay = $checkInDate->diffInDays($checkOutDate);
         return $roomPrice * $durationOfStay;
-    }
-
-    public function createPayment(Booking $booking, int $totalPrice): Payment
-    {
-        return Payment::create([
-            'booking_id' => $booking->id,
-            'amount' => $totalPrice,
-            'payment_date' => now(),
-            'status' => PaymentStatusEnum::Pending,
-        ]);
     }
 }
